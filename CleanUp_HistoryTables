@@ -1,0 +1,200 @@
+
+--drop table TempClient_History06022023_1 
+--drop table TempClient_History06022023_2
+--drop table TempClient_History06022023_Original
+
+
+
+
+select *  
+into TempClient_History06022023_Original
+from Client_History
+
+SELECT
+SysStartTime,SysEndTime,ClientId,
+FirstName
+,LastName
+,MiddleName
+,DateOfBirth
+,Gender
+,SSN
+,AddressLine1
+,AddressLine2
+,City
+,State
+,ZipCode
+,PrimaryPhone
+,Email
+,EthnicRaceId
+,FaithTypeId
+,EducationTypeId
+,MaritalStatus
+,UpdatedBy
+,PractitionerId
+,IsPregnant
+,EthnicityId
+,VeteranId
+,ReferralSourceId
+,HouseHoldIncome
+,ProgramId
+,ProfileImgAttachmentId
+,CenterId
+,StudentId
+,ProgramLevelId
+,FullName
+,AdmissionDate
+,ExternalId
+,DeactivatedDate
+,UserId
+,IsExcludeCW
+,CenterServiceTypeId
+,DateInserted
+,StatusId
+,IsUpdatedINeRX
+,IsArchived
+,ShortClientId
+,Episode
+,DisplayClientId
+,CountryCode
+,ProjectedCompletionDate
+
+,lag(SysEndTime,1,null) OVER(Partition by 
+ClientId
+,FirstName
+,LastName
+,MiddleName
+,DateOfBirth
+,Gender
+,SSN
+,AddressLine1
+,AddressLine2
+,City
+,State
+,ZipCode
+,PrimaryPhone
+,Email
+,EthnicRaceId
+,FaithTypeId
+,EducationTypeId
+,MaritalStatus
+,UpdatedBy
+,PractitionerId
+,IsPregnant
+,EthnicityId
+,VeteranId
+,ReferralSourceId
+,HouseHoldIncome
+,ProgramId
+,ProfileImgAttachmentId
+,CenterId
+,StudentId
+,ProgramLevelId
+,FullName
+,AdmissionDate
+,ExternalId
+,DeactivatedDate
+,UserId
+,IsExcludeCW
+,CenterServiceTypeId
+,DateInserted
+,StatusId
+,IsUpdatedINeRX
+,IsArchived
+,ShortClientId
+,Episode
+,DisplayClientId
+,CountryCode
+,ProjectedCompletionDate ORDER BY Sysstarttime,sysendtime) lag1endTime,
+lead(SysStartTime,1,null) OVER(Partition by 
+ClientId
+,FirstName
+,LastName
+,MiddleName
+,DateOfBirth
+,Gender
+,SSN
+,AddressLine1
+,AddressLine2
+,City
+,State
+,ZipCode
+,PrimaryPhone
+,Email
+,EthnicRaceId
+,FaithTypeId
+,EducationTypeId
+,MaritalStatus
+,UpdatedBy
+,PractitionerId
+,IsPregnant
+,EthnicityId
+,VeteranId
+,ReferralSourceId
+,HouseHoldIncome
+,ProgramId
+,ProfileImgAttachmentId
+,CenterId
+,StudentId
+,ProgramLevelId
+,FullName
+,AdmissionDate
+,ExternalId
+,DeactivatedDate
+,UserId
+,IsExcludeCW
+,CenterServiceTypeId
+,DateInserted
+,StatusId
+,IsUpdatedINeRX
+,IsArchived
+,ShortClientId
+,Episode
+,DisplayClientId
+,CountryCode
+,ProjectedCompletionDate ORDER BY Sysstarttime,sysendtime) lead1StartTime
+INTO TempClient_History06022023_1
+FROM TempClient_History06022023_Original
+
+
+----best sol
+DELETE C
+FROM TempClient_History06022023_1 T
+JOIN TempClient_History06022023_Original C ON C.ClientId= T.ClientId AND C.SysStartTime= T.SysStartTime AND C.SysEndTime= T.SysEndTime
+where (C.SysStartTime=T.lag1endTime )
+
+
+SELECT
+ClientId,SysStartTime,SysEndTime,
+lead(SysStartTime,1,null) 
+OVER(Partition by 
+ClientId ORDER BY Sysstarttime,sysendtime) lead1StartTime
+INTO TempClient_History06022023_2
+FROM TempClient_History06022023_Original
+
+UPDATE C SET SysEndTime= lead1StartTime
+FROM TempClient_History06022023_2 T
+JOIN TempClient_History06022023_Original C ON C.ClientId= T.ClientId AND C.SysStartTime= T.SysStartTime AND C.SysEndTime= T.SysEndTime
+where lead1StartTime<> C.SysEndTime
+
+
+--ALTER TABLE [dbo].[Client]
+--SET (SYSTEM_VERSIONING = OFF)
+--GO
+
+--ALTER TABLE [dbo].[Client]
+--SET
+--(SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].Client_History ))
+--GO
+
+--ALTER TABLE [dbo].[Client]
+--SET
+--(SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].TempClient_History06022023_Original ))
+--GO
+
+/*
+	S	E	R	LE		ME	
+A	15	20	1	NULL	35
+B	20	25	1	NULL	25
+A	25	30	2	20		35
+A	30	35	3	30		35
+*/
